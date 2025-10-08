@@ -1,0 +1,60 @@
+{
+  "meta": {
+    "language": "Español",
+    "locale": "es",
+    "direction": "ltr"
+  },
+  "auth": {
+    "title": "manilua",
+    "getApiKey": "Obtén tu clave API en:",
+    "website": "www.piracybound.com/manilua",
+    "placeholder": "Ingresa tu clave API de manilua...",
+    "instructions": "Pega tu clave API de manilua abajo. Puedes encontrarla en piracybound.com.",
+    "example": "Ejemplo: MANI-XXXX-XXXX-XXXX. La clave distingue mayusculas y minusculas.",
+    "required": "Por favor ingresa tu clave API.",
+    "save": "Guardar clave API",
+    "saving": "Guardando...",
+    "invalid": "Clave inválida",
+    "error": "Error"
+  },
+  "btn": {
+    "add": "Añadir vía manilua",
+    "remove": "Eliminar vía manilua",
+    "loading": "Cargando...",
+    "removing": "Eliminando...",
+    "cancel": "Cancelar"
+  },
+  "tooltip": {
+    "add": "Descargar e instalar archivos del juego vía manilua",
+    "remove": "Eliminar archivos del juego de la biblioteca de manilua"
+  },
+  "status": {
+    "downloading": "Descargando e instalando archivos del juego...",
+    "checking": "Verificando disponibilidad…",
+    "checkingApi": "Verificando {api}…",
+    "queued": "Inicializando descarga…",
+    "downloadingFrom": "Descargando desde {endpoint}…",
+    "downloadingProgress": "Descargando desde {endpoint}… ({downloaded}MB / {total}MB)",
+    "downloadingPercent": "Descargando desde {endpoint}… {percent}%",
+    "processing": "Procesando paquete ZIP…",
+    "extracting": "Extrayendo archivos del juego…",
+    "extractingCount": "Extrayendo archivos del juego… ({count} archivos procesados)",
+    "installing": "Instalando en Steam…",
+    "installingCount": "Instalando archivos ({count} archivos)…",
+    "done": "¡Instalación completada!",
+    "failed": "Descarga fallida",
+    "chooseEndpoint": "Múltiples fuentes disponibles - elige una",
+    "gameAdded": "¡Juego añadido con éxito!"
+  },
+  "banner": {
+    "inLibrary": "EN BIBLIOTECA",
+    "alreadyOwned": "{gameName} ya está en tu biblioteca de Steam",
+    "inLibraryFlag": "En biblioteca"
+  },
+  "generic": {
+    "thisGame": "Este juego",
+    "error": "Error",
+    "success": "Éxito",
+    "close": "Cerrar"
+  }
+}

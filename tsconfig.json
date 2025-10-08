@@ -1,0 +1,27 @@
+{
+    "compilerOptions": {
+        "outDir": ".millennium/Dist",
+        "module": "ESNext",
+        "target": "ES2020",
+        "jsx": "react",
+        "declaration": false,
+        "moduleResolution": "node",
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "esModuleInterop": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "noImplicitAny": true,
+        "strict": true,
+        "allowSyntheticDefaultImports": true,
+        "skipLibCheck": true,
+        "resolveJsonModule": true,
+        "types": ["steam-types"],
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["frontend/*"]
+        }
+    },
+    "include": ["frontend/**/*"],
+    "exclude": ["node_modules", ".millennium", "backend"]
+}

@@ -1,0 +1,8 @@
+{
+  "$schema": "https://raw.githubusercontent.com/SteamClientHomebrew/Millennium/main/src/sys/plugin-schema.json",
+  "name": "manilua",
+  "common_name": "manilua",
+  "description": "download games easily.",
+  "version": "3.1.1",
+  "author": "debounced / piracybound"
+}

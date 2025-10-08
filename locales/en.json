@@ -1,0 +1,60 @@
+{
+  "meta": {
+    "language": "English",
+    "locale": "en",
+    "direction": "ltr"
+  },
+  "auth": {
+    "title": "manilua",
+    "getApiKey": "Get your API key from:",
+    "website": "www.piracybound.com/manilua",
+    "placeholder": "Enter your manilua API key...",
+    "instructions": "Paste your manilua API key below. You can find it at piracybound.com.",
+    "example": "Example: MANI-XXXX-XXXX-XXXX. The key is case-sensitive.",
+    "required": "Please enter your API key.",
+    "save": "Save API Key",
+    "saving": "Saving...",
+    "invalid": "Invalid Key",
+    "error": "Error"
+  },
+  "btn": {
+    "add": "Add via manilua",
+    "remove": "Remove via manilua",
+    "loading": "Loading...",
+    "removing": "Removing...",
+    "cancel": "Cancel"
+  },
+  "tooltip": {
+    "add": "Download and install game files via manilua",
+    "remove": "Remove game files from manilua library"
+  },
+  "status": {
+    "downloading": "Downloading and installing game files...",
+    "checking": "Checking availability…",
+    "checkingApi": "Checking {api}…",
+    "queued": "Initializing download…",
+    "downloadingFrom": "Downloading from {endpoint}…",
+    "downloadingProgress": "Downloading from {endpoint}… ({downloaded}MB / {total}MB)",
+    "downloadingPercent": "Downloading from {endpoint}… {percent}%",
+    "processing": "Processing ZIP package…",
+    "extracting": "Extracting game files…",
+    "extractingCount": "Extracting game files… ({count} files processed)",
+    "installing": "Installing to Steam…",
+    "installingCount": "Installing files ({count} files)…",
+    "done": "Installation complete!",
+    "failed": "Download failed",
+    "chooseEndpoint": "Multiple sources available - choose one",
+    "gameAdded": "Game Added Successfully!"
+  },
+  "banner": {
+    "inLibrary": "IN LIBRARY",
+    "alreadyOwned": "{gameName} is already in your Steam library",
+    "inLibraryFlag": "In library"
+  },
+  "generic": {
+    "thisGame": "This game",
+    "error": "Error",
+    "success": "Success",
+    "close": "Close"
+  }
+}
