@@ -1,0 +1,60 @@
+{
+  "meta": {
+    "language": "Français",
+    "locale": "fr",
+    "direction": "ltr"
+  },
+  "auth": {
+    "title": "manilua",
+    "getApiKey": "Obtenez votre clé d’API:",
+    "website": "www.piracybound.com/manilua",
+    "placeholder": "Insérez vote clé d’API manilua...",
+    "instructions": "Collez votre clé d’API en dessous. Vous pouvez la trouver sur piracybound.com.",
+    "example": "Exemple: MANI-XXXX-XXXX-XXXX. Les majuscules comptent.",
+    "required": "Insérez votre clé d’API svp.",
+    "save": "sauvegarder la clé d’API",
+    "saving": "Sauvegarde...",
+    "invalid": "Clé invalide",
+    "error": "Erreur"
+  },
+  "btn": {
+    "add": "Ajouter avec manilua",
+    "remove": "Retirer avec manilua",
+    "loading": "Chargement ...",
+    "removing": "Suppression...",
+    "cancel": "Annuler"
+  },
+  "tooltip": {
+    "add": "Télécharger et installer les fichiers du jeu avec manilua",
+    "remove": "Supprimer les fichiers du jeu de la bibliothèque manilua"
+  },
+  "status": {
+    "downloading": "Téléchargement et installation des fichiers du jeu...",
+    "checking": "Verification de la disponibilité…",
+    "checkingApi": "Verification de {api}…",
+    "queued": "Début du téléchargement…",
+    "downloadingFrom": "Téléchargement depuis {endpoint}…",
+    "downloadingProgress": "Téléchargement depuis {endpoint}… ({downloaded}MB / {total}MB)",
+    "downloadingPercent": "Téléchargement depuis {endpoint}… {percent}%",
+    "processing": "Prise en charge de l’archive ZIP…",
+    "extracting": "Extraction des fichiers du jeu…",
+    "extractingCount": "Extraction des fichiers du jeu… ({count} fichiers extraits)",
+    "installing": "Installation sur Steam…",
+    "installingCount": "Installation des fichiers ({count} fichiers)…",
+    "done": "Installation terminée!",
+    "failed": "Téléchargement échoué",
+    "chooseEndpoint": "Plusieurs sources disponibles - choisissez-en une",
+    "gameAdded": "Jeu correctement ajouté!"
+  },
+  "banner": {
+    "inLibrary": "DANS LA BIBLIOTHÈQUE",
+    "alreadyOwned": "{gameName} est déjà dans votre bibliothèque Steam",
+    "inLibraryFlag": "Dans la bibliothèque"
+  },
+  "generic": {
+    "thisGame": "Ce jeu",
+    "error": "Erreur",
+    "success": "Succès",
+    "close": "Fermer"
+  }
+}
