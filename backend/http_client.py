@@ -34,6 +34,27 @@ class HTTPClient:
     def __init__(self, timeout: int = HTTP_TIMEOUT_DEFAULT):
         self._client = None
         self._timeout = timeout
+        self._cached_headers = None
+
+    def _get_cached_headers(self) -> Dict[str, str]:
+        if self._cached_headers is None:
+            headers = BASE_HEADERS.copy()
+
+            if STEAM_VERIFICATION_AVAILABLE and get_steam_verification is not None:
+                try:
+                    verification = get_steam_verification()
+                    verification_headers = verification.get_verification_headers()
+                    headers.update(verification_headers)
+                except Exception as e:
+                    logger.warn(f"HTTPClient: Could not add Steam verification headers: {e}")
+                    headers['User-Agent'] = USER_AGENT
+            else:
+                logger.warn("HTTPClient: Steam verification not available, using fallback User-Agent")
+                headers['User-Agent'] = USER_AGENT
+
+            self._cached_headers = headers
+
+        return self._cached_headers
 
     def _ensure_client(self):
         if not HTTPX_AVAILABLE:
@@ -55,21 +76,10 @@ class HTTPClient:
     def get(self, url: str, params: Optional[Dict[str, Any]] = None, auth_token: Optional[str] = None) -> Dict[str, Any]:
         try:
             client = self._ensure_client()
-            headers = BASE_HEADERS.copy()
-
-            if STEAM_VERIFICATION_AVAILABLE and get_steam_verification is not None:
-                try:
-                    verification = get_steam_verification()
-                    verification_headers = verification.get_verification_headers()
-                    headers.update(verification_headers)
-                except Exception as e:
-                    logger.warn(f"HTTPClient: Could not add Steam verification headers: {e}")
-                    headers['User-Agent'] = USER_AGENT
-            else:
-                logger.warn("HTTPClient: Steam verification not available, using fallback User-Agent")
-                headers['User-Agent'] = USER_AGENT
+            headers = self._get_cached_headers()
 
             if auth_token:
+                headers = headers.copy()
                 headers['Authorization'] = f'Bearer {auth_token}'
 
             response = client.get(url, params=params or {}, headers=headers)
@@ -107,21 +117,10 @@ class HTTPClient:
     def get_binary(self, url: str, params: Optional[Dict[str, Any]] = None, auth_token: Optional[str] = None) -> Dict[str, Any]:
         try:
             client = self._ensure_client()
-            headers = BASE_HEADERS.copy()
-
-            if STEAM_VERIFICATION_AVAILABLE and get_steam_verification is not None:
-                try:
-                    verification = get_steam_verification()
-                    verification_headers = verification.get_verification_headers()
-                    headers.update(verification_headers)
-                except Exception as e:
-                    logger.warn(f"HTTPClient: Could not add Steam verification headers: {e}")
-                    headers['User-Agent'] = USER_AGENT
-            else:
-                logger.warn("HTTPClient: Steam verification not available, using fallback User-Agent")
-                headers['User-Agent'] = USER_AGENT
+            headers = self._get_cached_headers()
 
             if auth_token:
+                headers = headers.copy()
                 headers['Authorization'] = f'Bearer {auth_token}'
 
             response = client.get(url, params=params or {}, headers=headers)
@@ -159,21 +158,10 @@ class HTTPClient:
     def post(self, url: str, data: Optional[Dict[str, Any]] = None, auth_token: Optional[str] = None) -> Dict[str, Any]:
         try:
             client = self._ensure_client()
-            headers = BASE_HEADERS.copy()
-
-            if STEAM_VERIFICATION_AVAILABLE and get_steam_verification is not None:
-                try:
-                    verification = get_steam_verification()
-                    verification_headers = verification.get_verification_headers()
-                    headers.update(verification_headers)
-                except Exception as e:
-                    logger.warn(f"HTTPClient: Could not add Steam verification headers: {e}")
-                    headers['User-Agent'] = USER_AGENT
-            else:
-                logger.warn("HTTPClient: Steam verification not available, using fallback User-Agent")
-                headers['User-Agent'] = USER_AGENT
+            headers = self._get_cached_headers()
 
             if auth_token:
+                headers = headers.copy()
                 headers['Authorization'] = f'Bearer {auth_token}'
 
             if data:
@@ -216,18 +204,11 @@ class HTTPClient:
         auth_token = kwargs.pop('auth_token', None)
         params = kwargs.pop('params', None)
 
-        headers = BASE_HEADERS.copy()
+        headers = self._get_cached_headers()
 
-        if STEAM_VERIFICATION_AVAILABLE and get_steam_verification is not None:
-            try:
-                verification = get_steam_verification()
-                verification_headers = verification.get_verification_headers()
-                headers.update(verification_headers)
-            except Exception as e:
-                logger.warn(f"HTTPClient: Could not add Steam verification headers for stream: {e}")
-                headers['User-Agent'] = USER_AGENT
-        else:
-            headers['User-Agent'] = USER_AGENT
+        if auth_token:
+            headers = headers.copy()
+            headers['Authorization'] = f'Bearer {auth_token}'
 
         return client.stream('GET', url, params=params, headers=headers, **kwargs)
 

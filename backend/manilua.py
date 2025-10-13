@@ -8,6 +8,15 @@ from steam_utils import get_stplug_in_path
 from api_manager import APIManager
 from config import API_BASE_URL, HTTP_CHUNK_SIZE, DOWNLOAD_PROGRESS_UPDATE_INTERVAL
 
+try:
+    import httpx
+    from httpx import HTTPStatusError
+    HTTPX_AVAILABLE = True
+except ImportError:
+    httpx = None
+    HTTPStatusError = None
+    HTTPX_AVAILABLE = False
+
 logger = PluginUtils.Logger()
 
 class maniluaManager:
@@ -40,10 +49,8 @@ class maniluaManager:
 
     def _download_from_manilua_backend(self, appid: int, endpoint: str = "") -> None:
         try:
-
             self._set_download_state(appid, {
                 'status': 'checking',
-                'currentApi': f'manilua ({endpoint})',
                 'bytesRead': 0,
                 'totalBytes': 0,
                 'endpoint': endpoint
@@ -52,7 +59,6 @@ class maniluaManager:
             client = get_global_client()
             if not client:
                 raise Exception("Failed to get HTTP client")
-
 
         except Exception as e:
             logger.error(f"manilua: Fatal error in download setup: {e}")
@@ -63,32 +69,10 @@ class maniluaManager:
             return
 
         try:
-            if endpoint == 'manilua':
-                download_url = f'{API_BASE_URL}/file/{appid}'
-            elif endpoint == 'donation':
-                download_url = f'{API_BASE_URL}/donation'
-            else:
-                download_url = f'{API_BASE_URL}/{endpoint}'
-
+            download_url = f'{API_BASE_URL}/game/{appid}'
 
             api_key = self.get_api_key()
-
             params = {'appid': appid}
-
-            if endpoint == 'ryuu' and api_key:
-                user_id_result = self.api_manager.get_user_id()
-
-                if user_id_result.get('success') and user_id_result.get('userId'):
-                    params['userId'] = user_id_result['userId']
-                else:
-                    logger.warn(f"manilua: Failed to get user ID for Ryuu endpoint: {user_id_result.get('error', 'Unknown error')}")
-
-            self._set_download_state(appid, {
-                'status': 'downloading',
-                'endpoint': endpoint,
-                'bytesRead': 0,
-                'totalBytes': 0
-            })
 
             temp_zip_path = os.path.join(self.backend_path, f"temp_{appid}.zip")
             bytes_read = 0
@@ -96,11 +80,28 @@ class maniluaManager:
 
             try:
                 with client.stream_get(download_url, params=params, auth_token=api_key) as resp:
+                    if not resp.is_success:
+                        if resp.status_code == 401:
+                            raise Exception("API key authentication failed")
+                        elif resp.status_code == 404:
+                            raise Exception(f"Game {appid} not found")
+                        else:
+                            raise Exception(f"HTTP {resp.status_code}: {resp.reason_phrase}")
+
                     try:
                         total = int(resp.headers.get('Content-Length', '0'))
                     except Exception as e:
                         logger.warn(f"manilua: Could not parse Content-Length header: {e}")
                         total = 0
+
+                    content_type = resp.headers.get('content-type', '').lower()
+                    if 'application/json' in content_type:
+                        error_text = resp.read().decode('utf-8')
+                        logger.error(f"manilua: Received JSON error response: {error_text}")
+                        if resp.status_code == 401 or 'authentication' in error_text.lower():
+                            raise Exception("API key authentication failed")
+                        else:
+                            raise Exception(f"Server error: {error_text}")
 
                     self._set_download_state(appid, {
                         'status': 'downloading',
@@ -126,19 +127,15 @@ class maniluaManager:
                                 self._set_download_state(appid, {
                                     'status': 'downloading',
                                     'bytesRead': bytes_read,
-                                    'totalBytes': total
+                                    'totalBytes': total,
+                                    'endpoint': endpoint
                                 })
                                 last_state_update_ts = now_ts
 
                 if bytes_read <= 0:
                     raise Exception("Empty download from endpoint")
 
-                self._set_download_state(appid, {
-                    'status': 'downloading',
-                    'bytesRead': bytes_read,
-                    'totalBytes': total if total > 0 else bytes_read
-                })
-
+                
                 self._set_download_state(appid, {
                     'status': 'processing',
                     'bytesRead': bytes_read,
@@ -163,15 +160,12 @@ class maniluaManager:
                         dest_file = os.path.join(target_dir, f"{appid}.lua")
 
                         try:
-                            os.replace(temp_zip_path, dest_file)
-                        except Exception as e:
-                            logger.warn(f"manilua: Could not replace file for app {appid}, copying instead: {e}")
                             with open(temp_zip_path, 'rb') as src, open(dest_file, 'wb') as dst:
                                 dst.write(src.read())
-                            try:
-                                os.remove(temp_zip_path)
-                            except Exception as e2:
-                                logger.warn(f"manilua: Could not remove temp file for app {appid}: {e2}")
+                            os.remove(temp_zip_path)
+                        except Exception as e:
+                            logger.warn(f"manilua: Could not copy file for app {appid}: {e}")
+                            raise
 
                         self._set_download_state(appid, {
                             'status': 'installing',
@@ -196,6 +190,16 @@ class maniluaManager:
                     except Exception as e2:
                         logger.warn(f"manilua: Could not remove temp file on error cleanup for app {appid}: {e2}")
 
+                error_message = str(e)
+                if "authentication failed" in error_message.lower() or (HTTPX_AVAILABLE and HTTPStatusError is not None and isinstance(e, HTTPStatusError) and e.response.status_code == 401):
+                    logger.error(f"manilua: API key authentication failed for app {appid}")
+                    self._set_download_state(appid, {
+                        'status': 'auth_failed',
+                        'error': 'API key authentication failed. Please set a valid API key.',
+                        'requiresNewKey': True
+                    })
+                    return
+
                 self._set_download_state(appid, {
                     'status': 'failed',
                     'error': f'Download failed: {str(e)}'
@@ -218,7 +222,7 @@ class maniluaManager:
 
             with zipfile.ZipFile(zip_path, 'r') as zip_file:
                 file_list = zip_file.namelist()
-                logger.log(f"manilua: ZIP contains {len(file_list)} files: {file_list}")
+                logger.log(f"manilua: ZIP contains {len(file_list)} files")
 
                 lua_files = [f for f in file_list if f.lower().endswith('.lua')]
 
@@ -228,11 +232,13 @@ class maniluaManager:
 
                 self._set_download_state(appid, {'status': 'installing'})
 
-                for file_name in lua_files:
-                    try:
-                        if file_name.endswith('/'):
-                            continue
+                installed_files = []
 
+                for file_name in lua_files:
+                    if file_name.endswith('/'):
+                        continue
+
+                    try:
                         file_content = zip_file.read(file_name)
 
                         if file_name.lower().endswith('.lua'):
@@ -259,7 +265,6 @@ class maniluaManager:
                                 out.write(str(file_content))
 
                         installed_files.append(dest_file)
-                        logger.log(f"manilua: Extracted {file_name} -> {dest_file}")
 
                     except Exception as e:
                         logger.error(f"manilua: Failed to extract {file_name}: {e}")
@@ -294,7 +299,7 @@ class maniluaManager:
             'totalBytes': 0
         })
 
-        available_endpoints = ['oureveryday', 'ryuu', 'manilua', 'donation']
+        available_endpoints = ['unified']
         if endpoints:
             available_endpoints = endpoints
 
@@ -317,114 +322,9 @@ class maniluaManager:
 
         return {'success': True}
 
-    def select_endpoint_and_download(self, appid: int, selected_endpoint: str) -> Dict[str, Any]:
-        try:
-            appid = int(appid)
-        except (ValueError, TypeError):
-            return {'success': False, 'error': 'Invalid appid'}
-
-        state = self._get_download_state(appid)
-        if state.get('status') != 'awaiting_endpoint_choice':
-            return {'success': False, 'error': 'Not awaiting endpoint choice'}
-
-        available_endpoints = state.get('available_endpoints', [])
-        if selected_endpoint not in available_endpoints:
-            return {'success': False, 'error': f'Endpoint {selected_endpoint} not available'}
-
-
-        def safe_download_wrapper():
-            try:
-                self._download_from_manilua_backend(appid, selected_endpoint)
-            except Exception as e:
-                logger.error(f"manilua: Download error: {e}")
-                self._set_download_state(appid, {
-                    'status': 'failed',
-                    'error': f'Download failed: {str(e)}'
-                })
-
-        thread = threading.Thread(target=safe_download_wrapper, daemon=True)
-        thread.start()
-
-        return {'success': True}
-
+  
     def _check_availability_and_download(self, appid: int, endpoints_to_check: List[str]) -> None:
-        self._set_download_state(appid, {
-            'status': 'checking_availability',
-            'currentApi': 'Checking all endpoints...',
-            'bytesRead': 0,
-            'totalBytes': 0
-        })
-
-        available_on = []
-
-        import concurrent.futures
-
-        def check_single_endpoint(endpoint):
-            try:
-                result = self.api_manager.check_availability(appid, endpoint)
-
-                if 'debug' in result:
-                    pass
-
-                if result.get('success', False) and result.get('available', False):
-                    return endpoint
-                else:
-                    return None
-
-            except Exception as e:
-                logger.error(f"manilua: Error checking availability on {endpoint}: {e}")
-                return None
-
-        self._set_download_state(appid, {
-            'status': 'checking_availability',
-            'currentApi': 'Checking all endpoints...',
-        })
-
-        try:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
-                future_to_endpoint = {executor.submit(check_single_endpoint, endpoint): endpoint
-                                      for endpoint in endpoints_to_check}
-
-                try:
-                    for future in concurrent.futures.as_completed(future_to_endpoint, timeout=15):
-                        try:
-                            result = future.result()
-                            if result:
-                                available_on.append(result)
-                        except Exception as e:
-                            endpoint = future_to_endpoint[future]
-                            logger.error(f"manilua: Parallel check failed for {endpoint}: {e}")
-                except concurrent.futures.TimeoutError:
-                    for future in future_to_endpoint:
-                        if not future.done():
-                            future.cancel()
-                    logger.warn(f"manilua: Availability check timed out, using {len(available_on)} completed results")
-        except Exception as e:
-            logger.error(f"manilua: Availability check crashed: {e}")
-            try:
-                result = check_single_endpoint(endpoints_to_check[0])
-                if result:
-                    available_on.append(result)
-            except Exception as e2:
-                logger.error(f"manilua: Fallback single-endpoint check also failed: {e2}")
-
-        if not available_on:
-            self._set_download_state(appid, {
-                'status': 'failed',
-                'error': f'App {appid} is not available on any endpoint'
-            })
-            return
-        elif len(available_on) == 1:
-            selected_endpoint = available_on[0]
-        else:
-            self._set_download_state(appid, {
-                'status': 'awaiting_endpoint_choice',
-                'available_endpoints': available_on,
-                'message': f'Available on: {", ".join(available_on)}. Choose an endpoint to download from.'
-            })
-            return
-
-        self._download_from_manilua_backend(appid, selected_endpoint)
+        self._download_from_manilua_backend(appid, 'unified')
 
     def remove_via_lua(self, appid: int) -> Dict[str, Any]:
         try:

@@ -2,6 +2,7 @@ import en from "../locales/en.json";
 import es from "../locales/es.json";
 import ptBR from "../locales/pt-BR.json";
 import fr from "../locales/fr.json";
+import it from "../locales/it.json";
 
 type TranslationMap = Record<string, any>;
 
@@ -11,6 +12,7 @@ const STATIC_TRANSLATIONS: Record<string, TranslationMap> = {
   es,
   "pt-BR": ptBR,
   fr,
+  it,
 };
 
 function normaliseLocale(locale: string | undefined | null): string {

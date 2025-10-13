@@ -1,9 +1,4 @@
 {
-  "meta": {
-    "language": "English",
-    "locale": "en",
-    "direction": "ltr"
-  },
   "auth": {
     "title": "manilua",
     "getApiKey": "Get your API key from:",
@@ -24,37 +19,22 @@
     "removing": "Removing...",
     "cancel": "Cancel"
   },
-  "tooltip": {
-    "add": "Download and install game files via manilua",
-    "remove": "Remove game files from manilua library"
-  },
   "status": {
     "downloading": "Downloading and installing game files...",
     "checking": "Checking availability…",
     "checkingApi": "Checking {api}…",
     "queued": "Initializing download…",
-    "downloadingFrom": "Downloading from {endpoint}…",
     "downloadingProgress": "Downloading from {endpoint}… ({downloaded}MB / {total}MB)",
-    "downloadingPercent": "Downloading from {endpoint}… {percent}%",
     "processing": "Processing ZIP package…",
     "extracting": "Extracting game files…",
     "extractingCount": "Extracting game files… ({count} files processed)",
     "installing": "Installing to Steam…",
-    "installingCount": "Installing files ({count} files)…",
-    "done": "Installation complete!",
     "failed": "Download failed",
-    "chooseEndpoint": "Multiple sources available - choose one",
-    "gameAdded": "Game Added Successfully!"
-  },
-  "banner": {
-    "inLibrary": "IN LIBRARY",
-    "alreadyOwned": "{gameName} is already in your Steam library",
-    "inLibraryFlag": "In library"
+    "gameAdded": "Game Added Successfully!",
+    "authFailed": "API key authentication failed"
   },
   "generic": {
-    "thisGame": "This game",
     "error": "Error",
-    "success": "Success",
     "close": "Close"
   }
 }

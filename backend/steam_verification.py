@@ -27,7 +27,6 @@ class SteamVerification:
     def _discover_steam_process(self):
         try:
             if not PSUTIL_AVAILABLE:
-                logger.warn("manilua (steam_verification): psutil not available, using fallback PID")
                 self.steam_pid = random.randint(1000, 65535)
                 return
 
@@ -44,13 +43,11 @@ class SteamVerification:
                         continue
 
             if not self.steam_pid:
-                logger.warn("manilua (steam_verification): Steam process not found, using fallback PID")
                 self.steam_pid = random.randint(1000, 65535)
 
             try:
                 self.millennium_version = Millennium.version()
-            except Exception as e:
-                logger.warn(f"manilua (steam_verification): Could not get Millennium version: {e}")
+            except Exception:
                 self.millennium_version = "1.0.0"
 
         except Exception as e:

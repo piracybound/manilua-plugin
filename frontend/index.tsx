@@ -21,8 +21,6 @@ interface ApiStatus {
 
 interface DownloadModal {
     update: (text: string) => void;
-    showEndpointOptions: (endpoints: string[], onSelect: (endpoint: string) => void) => void;
-    clearEndpointOptions: () => void;
     close: (delay?: number) => void;
 }
 
@@ -61,7 +59,7 @@ async function callBackend<T = any>(method: string, args?: Record<string, unknow
 
         return result as T;
     } catch (error) {
-        console.error('manilua:', method, error);
+        backendLog(`Backend call failed: ${method} - ${String(error)}`);
         throw error;
     }
 }
@@ -150,7 +148,6 @@ function showDownloadModal(initialTextKey: string = 'status.downloading'): Downl
     let overlay: HTMLElement | null = null;
     let content: HTMLElement | null = null;
     let messageEl: HTMLElement | null = null;
-    let optionsEl: HTMLElement | null = null;
     let closed = false;
 
     const buildDom = () => {
@@ -196,13 +193,6 @@ function showDownloadModal(initialTextKey: string = 'status.downloading'): Downl
             messageEl.style.color = '#ffffff';
             messageEl.textContent = pendingText;
             content.appendChild(messageEl);
-
-            optionsEl = document.createElement('div');
-            optionsEl.style.marginTop = '12px';
-            optionsEl.style.display = 'flex';
-            optionsEl.style.flexWrap = 'wrap';
-            optionsEl.style.gap = '6px';
-            content.appendChild(optionsEl);
         } else {
             messageEl.textContent = pendingText;
         }
@@ -228,39 +218,6 @@ function showDownloadModal(initialTextKey: string = 'status.downloading'): Downl
         }
     };
 
-    const clearEndpointOptions = () => {
-        if (optionsEl) {
-            optionsEl.innerHTML = '';
-        }
-    };
-
-    const showEndpointOptions = (endpoints: string[], onSelect: (endpoint: string) => void) => {
-        ensureDom();
-        const container = optionsEl;
-        if (!container) {
-            return;
-        }
-
-        container.innerHTML = '';
-
-        endpoints.forEach((endpoint) => {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.textContent = endpoint;
-            btn.style.background = '#67c1f5';
-            btn.style.color = '#ffffff';
-            btn.style.border = 'none';
-            btn.style.borderRadius = '2px';
-            btn.style.padding = '6px 10px';
-            btn.style.cursor = 'pointer';
-            btn.style.fontSize = '12px';
-            btn.onclick = (event) => {
-                event.preventDefault();
-                onSelect(endpoint);
-            };
-            container.appendChild(btn);
-        });
-    };
 
     const close = (delay = 0) => {
         if (closed) {
@@ -317,11 +274,6 @@ function showDownloadModal(initialTextKey: string = 'status.downloading'): Downl
         messageEl.textContent = pendingText;
         messageEl.style.marginBottom = '12px';
 
-        optionsEl = document.createElement('div');
-        optionsEl.style.display = 'flex';
-        optionsEl.style.flexWrap = 'wrap';
-        optionsEl.style.gap = '6px';
-
         const closeBtn = document.createElement('button');
         closeBtn.type = 'button';
         closeBtn.textContent = t('generic.close');
@@ -329,7 +281,6 @@ function showDownloadModal(initialTextKey: string = 'status.downloading'): Downl
         closeBtn.onclick = () => close(0);
 
         panel.appendChild(messageEl);
-        panel.appendChild(optionsEl);
         panel.appendChild(closeBtn);
         fallbackOverlay.appendChild(panel);
         document.body.appendChild(fallbackOverlay);
@@ -342,8 +293,6 @@ function showDownloadModal(initialTextKey: string = 'status.downloading'): Downl
 
     return {
         update,
-        showEndpointOptions,
-        clearEndpointOptions,
         close,
     };
 }
@@ -371,7 +320,6 @@ function startProgressMonitoring(
             case 'queued':
                 return t('status.queued');
             case 'downloading': {
-                const endpoint = state.endpoint ? String(state.endpoint) : 'server';
                 if (
                     typeof state.bytesRead === 'number' &&
                     typeof state.totalBytes === 'number' &&
@@ -384,12 +332,11 @@ function startProgressMonitoring(
                         Math.max(0, Math.floor((state.bytesRead / state.totalBytes) * 100))
                     );
                     return `${t('status.downloadingProgress', {
-                        endpoint,
                         downloaded: downloadedMb,
                         total: totalMb,
                     })} (${percent}%)`;
                 }
-                return t('status.downloadingFrom', { endpoint });
+                return t('status.downloading');
             }
             case 'processing':
                 return t('status.processing');
@@ -407,12 +354,12 @@ function startProgressMonitoring(
                 }
                 return t('status.installing');
             }
-            case 'awaiting_endpoint_choice':
-                return t('status.chooseEndpoint');
             case 'done':
                 return t('status.gameAdded');
             case 'failed':
                 return state.error ? `${t('status.failed')}: ${state.error}` : t('status.failed');
+            case 'auth_failed':
+                return t('status.authFailed');
             default:
                 if (typeof state.status === 'string' && state.status.trim() !== '') {
                     return state.status;
@@ -461,32 +408,27 @@ function startProgressMonitoring(
 
             const statusValue = typeof state.status === 'string' ? state.status.toLowerCase() : '';
 
-            if (statusValue !== 'awaiting_endpoint_choice') {
-                modal.clearEndpointOptions();
-            }
-
             modal.update(describeStatus(state));
-
-            if (
-                statusValue === 'awaiting_endpoint_choice' &&
-                Array.isArray(state.available_endpoints) &&
-                state.available_endpoints.length > 0
-            ) {
-                modal.showEndpointOptions(state.available_endpoints, async (endpoint) => {
-                    modal.clearEndpointOptions();
-                    modal.update(t('status.downloadingFrom', { endpoint }));
-                    try {
-                        await callBackend('SelectEndpointAndDownload', { appid: appId, endpoint });
-                    } catch (error) {
-                        modal.update(`${t('status.failed')}: ${String(error)}`);
-                    }
-                });
-            }
 
             if (statusValue === 'done') {
                 modal.update(t('status.gameAdded'));
                 modal.close(2000);
                 finish(options.onDone);
+            } else if (statusValue === 'auth_failed' || (state.requiresNewKey && statusValue === 'failed')) {
+                modal.close(0);
+                apiState.checked = false;
+                apiState.hasKey = false;
+                apiState.isValid = false;
+
+                setTimeout(async () => {
+                    const configured = await showApiKeyPrompt(appId);
+                    if (!configured) {
+                        finish(() => options.onFailed('API key required'));
+                    } else {
+                        finish(() => { });
+                    }
+                }, 100);
+
             } else if (statusValue === 'failed') {
                 const errorMessage = state.error ?? t('generic.error');
                 modal.update(`${t('status.failed')}: ${errorMessage}`);
@@ -496,10 +438,16 @@ function startProgressMonitoring(
         } catch (error) {
             backendLog(`Progress monitoring error: ${String(error)}`);
         }
-    }, 400);
+    }, 600);
 }
 
 async function showApiKeyPrompt(appId: number | null): Promise<boolean> {
+    let attempts = 0;
+    while (document.querySelector('.newmodal') && attempts < 10) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        attempts++;
+    }
+
     if (document.querySelector('.newmodal')) {
         return false;
     }
@@ -686,15 +634,7 @@ async function ensureApiKey(appId: number): Promise<boolean> {
     if (!status.hasKey || status.isValid === false) {
         backendLog('API key missing or invalid, prompting user');
         const configured = await showApiKeyPrompt(appId);
-        if (!configured) {
-            return false;
-        }
-
-        const refreshed = await getApiStatus(true);
-        if (!refreshed.hasKey || refreshed.isValid === false) {
-            backendLog('API key still invalid after prompt');
-            return false;
-        }
+        return configured;
     }
 
     return true;
@@ -883,13 +823,24 @@ async function injectGamePageButtons() {
     }
 }
 
+let injectTimeout: number | null = null;
+
+function debouncedInject() {
+    if (injectTimeout) {
+        clearTimeout(injectTimeout);
+    }
+    injectTimeout = setTimeout(() => {
+        injectGamePageButtons().catch((error) => backendLog(`Inject error: ${String(error)}`));
+    }, 200);
+}
+
 export default async function PluginMain() {
     await initI18n();
 
     setTimeout(() => {
         const observer = new MutationObserver(() => {
             if (window.location.href.includes('/app/')) {
-                injectGamePageButtons().catch((error) => backendLog(`Mutation inject error: ${String(error)}`));
+                debouncedInject();
             }
         });
 

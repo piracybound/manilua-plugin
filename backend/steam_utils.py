@@ -27,15 +27,13 @@ def detect_steam_install_path() -> str:
         try:
             with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Valve\Steam") as key:
                 path, _ = winreg.QueryValueEx(key, 'SteamPath')
-        except Exception as e:
-            logger.log(f'manilua (steam_utils): Registry lookup failed: {e}')
+        except Exception:
             path = None
 
     if not path:
         try:
             path = Millennium.steam_path()
-        except Exception as e:
-            logger.error(f'manilua (steam_utils): Millennium steam_path() failed: {e}')
+        except Exception:
             path = None
 
     _steam_install_path = path
@@ -77,7 +75,6 @@ def has_lua_for_app(appid: int) -> bool:
         return False
 
 def list_lua_apps() -> list:
-    """List all installed manilua games sorted by most recent first"""
     try:
         base_path = detect_steam_install_path()
         if not base_path:
@@ -98,8 +95,7 @@ def list_lua_apps() -> list:
                 try:
                     mtime = os.path.getmtime(path)
                     apps_mtime[appid] = mtime
-                except Exception as e:
-                    logger.warn(f"manilua (steam_utils): Could not get mtime for {filename}: {e}")
+                except Exception:
                     continue
 
         return sorted(apps_mtime.keys(), key=lambda a: apps_mtime[a], reverse=True)

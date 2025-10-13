@@ -1,9 +1,4 @@
 {
-  "meta": {
-    "language": "Italiano",
-    "locale": "it",
-    "direction": "ltr"
-  },
   "auth": {
     "title": "manilua",
     "getApiKey": "Ottieni chiave API da:",
@@ -24,37 +19,22 @@
     "removing": "Rimozione in corso...",
     "cancel": "Annulla"
   },
-  "tooltip": {
-    "add": "Scarica e installa il gioco con manilua",
-    "remove": "Rimuovi il gioco dalla Libreria manilua"
-  },
   "status": {
     "downloading": "Scaricamento e installazione del gioco in corso...",
     "checking": "Verifica disponibilità…",
     "checkingApi": "Verifica {api}…",
     "queued": "Inizializzazione download…",
-    "downloadingFrom": "Scaricamento da {endpoint}…",
     "downloadingProgress": "Scaricamento da {endpoint}… ({downloaded}MB / {total}MB)",
-    "downloadingPercent": "Scaricamento da {endpoint}… {percent}%",
     "processing": "Elaborazione pacchetto ZIP…",
     "extracting": "Estrazione dei file di gioco…",
     "extractingCount": "Estrazione dei file di gioco… ({count} file elaborati)",
     "installing": "Installazione su Steam…",
-    "installingCount": "Installazione dei file ({count} file)…",
-    "done": "Installazione completata!",
     "failed": "Scaricamento non riuscito",
-    "chooseEndpoint": "Sono disponibili più sorgenti",
-    "gameAdded": "Gioco aggiunto con successo!"
-  },
-  "banner": {
-    "inLibrary": "IN LIBRERIA",
-    "alreadyOwned": "{gameName} è già nella tua Libreria di Steam",
-    "inLibraryFlag": "Nella libreria"
+    "gameAdded": "Gioco aggiunto con successo!",
+    "authFailed": "Autenticazione chiave API fallita"
   },
   "generic": {
-    "thisGame": "Questo gioco",
     "error": "Errore",
-    "success": "Successo",
     "close": "Chiudi"
   }
 }

@@ -1,9 +1,4 @@
 {
-  "meta": {
-    "language": "Português (Brasil)",
-    "locale": "pt-BR",
-    "direction": "ltr"
-  },
   "auth": {
     "title": "manilua",
     "getApiKey": "Obtenha sua chave da API em:",
@@ -24,37 +19,22 @@
     "removing": "Removendo...",
     "cancel": "Cancelar"
   },
-  "tooltip": {
-    "add": "Baixar e instalar arquivos do jogo via manilua",
-    "remove": "Remover arquivos do jogo da biblioteca do manilua"
-  },
   "status": {
     "downloading": "Baixando e instalando arquivos do jogo...",
     "checking": "Verificando disponibilidade…",
     "checkingApi": "Verificando {api}…",
     "queued": "Inicializando download…",
-    "downloadingFrom": "Baixando de {endpoint}…",
     "downloadingProgress": "Baixando de {endpoint}… ({downloaded}MB / {total}MB)",
-    "downloadingPercent": "Baixando de {endpoint}… {percent}%",
     "processing": "Processando pacote ZIP…",
     "extracting": "Extraindo arquivos do jogo…",
     "extractingCount": "Extraindo arquivos do jogo… ({count} arquivos processados)",
     "installing": "Instalando na Steam…",
-    "installingCount": "Instalando arquivos ({count} arquivos)…",
-    "done": "Instalação concluída!",
     "failed": "Download falhou",
-    "chooseEndpoint": "Várias fontes disponíveis - escolha uma",
-    "gameAdded": "Jogo adicionado com sucesso!"
-  },
-  "banner": {
-    "inLibrary": "NA BIBLIOTECA",
-    "alreadyOwned": "{gameName} já está na sua biblioteca da Steam",
-    "inLibraryFlag": "Na biblioteca"
+    "gameAdded": "Jogo adicionado com sucesso!",
+    "authFailed": "Falha na autenticação da chave API"
   },
   "generic": {
-    "thisGame": "Este jogo",
     "error": "Erro",
-    "success": "Sucesso",
     "close": "Fechar"
   }
 }

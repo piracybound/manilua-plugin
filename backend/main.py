@@ -6,7 +6,7 @@ import os
 from http_client import close_global_client
 from api_manager import APIManager
 from manilua import maniluaManager
-from steam_utils import detect_steam_install_path, has_lua_for_app, list_lua_apps
+from steam_utils import has_lua_for_app, list_lua_apps
 from config import API_KEY_PREFIX, VERSION
 
 logger = PluginUtils.Logger()
@@ -96,11 +96,6 @@ class Plugin:
         logger.log("manilua: v3.2.0 ready")
 
     def _load(self):
-        try:
-            detect_steam_install_path()
-        except Exception as e:
-            logger.log(f'manilua: Steam path detection failed: {e}')
-
         self._inject_webkit_files()
         Millennium.ready()
 
@@ -136,10 +131,8 @@ def hasluaForApp(appid: int) -> str:
 
 def addViamanilua(appid: int) -> str:
     try:
-        if plugin.has_api_key():
-            validation_result = plugin.api_manager.get_user_id()
-            if not validation_result['success']:
-                return error_response('API key is invalid. Please set a valid API key.', requiresNewKey=True)
+        if not plugin.has_api_key():
+            return error_response('No API key configured. Please set an API key first.', requiresNewKey=True)
 
         endpoints = plugin.api_manager.get_download_endpoints()
         result = plugin.manilua_manager.add_via_lua(appid, endpoints)
@@ -164,13 +157,6 @@ def GetLocalLibrary() -> str:
         logger.error(f'GetLocalLibrary failed: {e}')
         return error_response(str(e))
 
-def GetUserID() -> str:
-    try:
-        result = plugin.api_manager.get_user_id()
-        return json_response(result)
-    except Exception as e:
-        logger.error(f'GetUserID failed: {e}')
-        return error_response(str(e))
 
 def SetAPIKey(*args, **kwargs) -> str:
     try:
@@ -188,44 +174,13 @@ def SetAPIKey(*args, **kwargs) -> str:
         if not api_key.startswith(API_KEY_PREFIX):
             return error_response(f'Invalid API key format (must start with {API_KEY_PREFIX})')
 
-        temp_api_manager = APIManager(plugin.backend_path)
-        temp_api_manager.set_api_key(api_key)
-        validation_result = temp_api_manager.get_user_id()
-
-        if not validation_result['success']:
-            return error_response(f'Invalid API key: {validation_result.get("error", "Key validation failed")}')
-
         plugin._save_api_key(api_key)
         plugin.api_manager.set_api_key(api_key)
         plugin.manilua_manager.set_api_key(api_key)
 
-        return success_response(message='API key configured and validated successfully')
+        return success_response(message='API key configured successfully')
     except Exception as e:
         logger.error(f'SetAPIKey failed: {e}')
-        return error_response(str(e))
-
-def ValidateAPIKey() -> str:
-    try:
-        if not plugin.has_api_key():
-            return error_response('No API key configured')
-
-        validation_result = plugin.api_manager.get_user_id()
-
-        if validation_result['success']:
-            return success_response(valid=True, message='API key is valid')
-        else:
-            plugin._api_key = None
-            api_key_file = os.path.join(plugin.backend_path, 'api_key.txt')
-            if os.path.exists(api_key_file):
-                os.remove(api_key_file)
-
-            return success_response(
-                valid=False,
-                error=validation_result.get('error', 'API key validation failed'),
-                message='API key is invalid and has been cleared. Please set a new API key.'
-            )
-    except Exception as e:
-        logger.error(f'ValidateAPIKey failed: {e}')
         return error_response(str(e))
 
 def GetAPIKeyStatus() -> str:
@@ -238,14 +193,11 @@ def GetAPIKeyStatus() -> str:
             else:
                 masked_key = ''
 
-            validation_result = plugin.api_manager.get_user_id()
-            is_valid = validation_result['success']
-
             return success_response(
                 hasKey=True,
                 maskedKey=masked_key,
-                isValid=is_valid,
-                message='API key is configured' + (' and valid' if is_valid else ' but invalid')
+                isValid=True,
+                message='API key is configured'
             )
         else:
             return success_response(
@@ -257,13 +209,6 @@ def GetAPIKeyStatus() -> str:
         return error_response(str(e))
 
 
-def SelectEndpointAndDownload(appid: int, endpoint: str) -> str:
-    try:
-        result = plugin.manilua_manager.select_endpoint_and_download(appid, endpoint)
-        return json_response(result)
-    except Exception as e:
-        logger.error(f'SelectEndpointAndDownload failed for {appid}, {endpoint}: {e}')
-        return error_response(str(e))
 
 def removeViamanilua(appid: int) -> str:
     try:
