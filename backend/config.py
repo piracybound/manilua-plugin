@@ -1,4 +1,4 @@
-VERSION = '3.2.0'
+VERSION = '3.2.1'
 
 API_BASE_URL = 'https://www.piracybound.com/api'
 API_KEY_PREFIX = 'manilua_'

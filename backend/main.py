@@ -95,7 +95,7 @@ class Plugin:
             logger.error(f'manilua: Failed to inject: {e}')
 
     def _front_end_loaded(self):
-        logger.log("manilua: v3.2.0 ready")
+        logger.log("manilua: v3.2.1 ready")
 
     def _load(self):
         logger.log(f"manilua: backend loading (v{VERSION})")
