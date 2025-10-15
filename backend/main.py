@@ -50,6 +50,8 @@ class Plugin:
         if self.has_api_key() and isinstance(self._api_key, str) and self._api_key.strip() != "":
             self.api_manager.set_api_key(self._api_key)
             self.manilua_manager.set_api_key(self._api_key)
+        else:
+            logger.log("manilua: backend initialized without API key")
 
     def _load_api_key(self):
         api_key_file = os.path.join(self.backend_path, 'api_key.txt')
@@ -93,11 +95,13 @@ class Plugin:
             logger.error(f'manilua: Failed to inject: {e}')
 
     def _front_end_loaded(self):
-        logger.log("manilua: v3.2.0 ready")
+        logger.log(f"manilua: v{VERSION} ready")
 
     def _load(self):
+        logger.log(f"manilua: backend loading (v{VERSION})")
         self._inject_webkit_files()
         Millennium.ready()
+        logger.log("manilua: backend ready")
 
     def _unload(self):
         logger.log("Unloading manilua plugin")
