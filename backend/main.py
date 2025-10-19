@@ -53,9 +53,9 @@ class Plugin:
                 with open(api_key_file, 'r', encoding='utf-8') as f:
                     self._api_key = f.read().strip()
                 if not self._api_key:
-                    logger.log("manilua: API key file is empty")
+                    logger.log("API key file is empty")
         except Exception as e:
-            logger.error(f"manilua: Failed to load API key: {e}")
+            logger.error(f"Failed to load API key: {e}")
 
     def _save_api_key(self, api_key: str):
         api_key_file = os.path.join(self.backend_path, 'api_key.txt')
@@ -64,7 +64,7 @@ class Plugin:
                 f.write(api_key)
             self._api_key = api_key
         except Exception as e:
-            logger.error(f"manilua: Failed to save API key: {e}")
+            logger.error(f"Failed to save API key: {e}")
 
     def get_api_key(self):
         return self._api_key
@@ -83,18 +83,18 @@ class Plugin:
                 Millennium.add_browser_js(js_file_path)
                 self._injected = True
             else:
-                logger.error(f"manilua: Bundle not found")
+                logger.error(f"Bundle not found")
         except Exception as e:
-            logger.error(f'manilua: Failed to inject: {e}')
+            logger.error(f'Failed to inject: {e}')
 
     def _front_end_loaded(self):
-        logger.log(f"manilua: v{VERSION} ready")
+        logger.log(f"v{VERSION} ready")
 
     def _load(self):
         global plugin
         plugin = self
 
-        logger.log(f"manilua: backend loading (v{VERSION})")
+        logger.log(f"backend loading (v{VERSION})")
 
         self.plugin_dir = GetPluginDir()
         self.backend_path = os.path.join(self.plugin_dir, 'backend')
@@ -106,11 +106,11 @@ class Plugin:
             self.api_manager.set_api_key(self._api_key)
             self.manilua_manager.set_api_key(self._api_key)
         else:
-            logger.log("manilua: backend initialized without API key")
+            logger.log("backend initialized without API key")
 
         self._inject_webkit_files()
         Millennium.ready()
-        logger.log("manilua: backend ready")
+        logger.log("backend ready")
 
     def _unload(self):
         logger.log("Unloading manilua plugin")

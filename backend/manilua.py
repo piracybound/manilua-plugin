@@ -61,7 +61,7 @@ class maniluaManager:
                 raise Exception("Failed to get HTTP client")
 
         except Exception as e:
-            logger.error(f"manilua: Fatal error in download setup: {e}")
+            logger.error(f"Fatal error in download setup: {e}")
             self._set_download_state(appid, {
                 'status': 'failed',
                 'error': f'Setup failed: {str(e)}'
@@ -91,13 +91,13 @@ class maniluaManager:
                     try:
                         total = int(resp.headers.get('Content-Length', '0'))
                     except Exception as e:
-                        logger.warn(f"manilua: Could not parse Content-Length header: {e}")
+                        logger.warn(f"Could not parse Content-Length header: {e}")
                         total = 0
 
                     content_type = resp.headers.get('content-type', '').lower()
                     if 'application/json' in content_type:
                         error_text = resp.read().decode('utf-8')
-                        logger.error(f"manilua: Received JSON error response: {error_text}")
+                        logger.error(f"Received JSON error response: {error_text}")
                         if resp.status_code == 401 or 'authentication' in error_text.lower():
                             raise Exception("API key authentication failed")
                         else:
@@ -120,7 +120,7 @@ class maniluaManager:
                                 import time as _time
                                 now_ts = _time.time()
                             except Exception as e:
-                                logger.warn(f"manilua: Could not get timestamp for download progress: {e}")
+                                logger.warn(f"Could not get timestamp for download progress: {e}")
                                 now_ts = 0.0
 
                             if last_state_update_ts == 0.0 or (now_ts - last_state_update_ts) >= DOWNLOAD_PROGRESS_UPDATE_INTERVAL:
@@ -142,12 +142,12 @@ class maniluaManager:
                     'totalBytes': bytes_read if total == 0 else total
                 })
 
-                logger.log(f"manilua: Downloaded {bytes_read} bytes to {temp_zip_path}")
+                logger.log(f"Downloaded {bytes_read} bytes to {temp_zip_path}")
 
                 try:
                     is_zip = zipfile.is_zipfile(temp_zip_path)
                 except Exception as e:
-                    logger.warn(f"manilua: Could not verify if file is ZIP for app {appid}: {e}")
+                    logger.warn(f"Could not verify if file is ZIP for app {appid}: {e}")
                     is_zip = False
 
                 if is_zip:
@@ -164,7 +164,7 @@ class maniluaManager:
                                 dst.write(src.read())
                             os.remove(temp_zip_path)
                         except Exception as e:
-                            logger.warn(f"manilua: Could not copy file for app {appid}: {e}")
+                            logger.warn(f"Could not copy file for app {appid}: {e}")
                             raise
 
                         self._set_download_state(appid, {
@@ -172,9 +172,9 @@ class maniluaManager:
                             'installedFiles': [dest_file],
                             'installedPath': dest_file
                         })
-                        logger.log(f"manilua: Installed single LUA file for app {appid}: {dest_file}")
+                        logger.log(f"Installed single LUA file for app {appid}: {dest_file}")
                     except Exception as e:
-                        logger.error(f"manilua: Failed to install non-zip payload for app {appid}: {e}")
+                        logger.error(f"Failed to install non-zip payload for app {appid}: {e}")
                         raise
 
                 self._set_download_state(appid, {
@@ -188,11 +188,11 @@ class maniluaManager:
                     try:
                         os.remove(temp_zip_path)
                     except Exception as e2:
-                        logger.warn(f"manilua: Could not remove temp file on error cleanup for app {appid}: {e2}")
+                        logger.warn(f"Could not remove temp file on error cleanup for app {appid}: {e2}")
 
                 error_message = str(e)
                 if "authentication failed" in error_message.lower() or (HTTPX_AVAILABLE and HTTPStatusError is not None and isinstance(e, HTTPStatusError) and e.response.status_code == 401):
-                    logger.error(f"manilua: API key authentication failed for app {appid}")
+                    logger.error(f"API key authentication failed for app {appid}")
                     self._set_download_state(appid, {
                         'status': 'auth_failed',
                         'error': 'API key authentication failed. Please set a valid API key.',
@@ -206,7 +206,7 @@ class maniluaManager:
                 })
 
         except Exception as e:
-            logger.error(f"manilua: Backend download failed: {str(e)}")
+            logger.error(f"Backend download failed: {str(e)}")
             self._set_download_state(appid, {
                 'status': 'failed',
                 'error': f'Backend error: {str(e)}'
@@ -218,16 +218,16 @@ class maniluaManager:
             installed_files = []
 
             self._set_download_state(appid, {'status': 'extracting'})
-            logger.log(f"manilua: Extracting ZIP file {zip_path} to {target_dir}")
+            logger.log(f"Extracting ZIP file {zip_path} to {target_dir}")
 
             with zipfile.ZipFile(zip_path, 'r') as zip_file:
                 file_list = zip_file.namelist()
-                logger.log(f"manilua: ZIP contains {len(file_list)} files")
+                logger.log(f"ZIP contains {len(file_list)} files")
 
                 lua_files = [f for f in file_list if f.lower().endswith('.lua')]
 
                 if not lua_files:
-                    logger.warn(f"manilua: No .lua files found in ZIP, extracting all files")
+                    logger.warn(f"No .lua files found in ZIP, extracting all files")
                     lua_files = file_list
 
                 self._set_download_state(appid, {'status': 'installing'})
@@ -267,23 +267,23 @@ class maniluaManager:
                         installed_files.append(dest_file)
 
                     except Exception as e:
-                        logger.error(f"manilua: Failed to extract {file_name}: {e}")
+                        logger.error(f"Failed to extract {file_name}: {e}")
                         continue
 
             if not installed_files:
                 raise Exception("No files were successfully extracted from ZIP")
 
-            logger.log(f"manilua: Successfully installed {len(installed_files)} files from {endpoint}")
+            logger.log(f"Successfully installed {len(installed_files)} files from {endpoint}")
             self._set_download_state(appid, {
                 'installedFiles': installed_files,
                 'installedPath': installed_files[0] if installed_files else None
             })
 
         except zipfile.BadZipFile as e:
-            logger.error(f'manilua: Invalid ZIP file for app {appid}: {e}')
+            logger.error(f'Invalid ZIP file for app {appid}: {e}')
             raise Exception(f"Invalid ZIP file: {str(e)}")
         except Exception as e:
-            logger.error(f'manilua: Failed to extract ZIP for app {appid}: {e}')
+            logger.error(f'Failed to extract ZIP for app {appid}: {e}')
             raise
 
     def add_via_lua(self, appid: int, endpoints: Optional[List[str]] = None) -> Dict[str, Any]:
@@ -307,7 +307,7 @@ class maniluaManager:
             try:
                 self._check_availability_and_download(appid, endpoints_to_check)
             except Exception as e:
-                logger.error(f"manilua: Unhandled error in availability check thread: {e}")
+                logger.error(f"Unhandled error in availability check thread: {e}")
                 self._set_download_state(appid, {
                     'status': 'failed',
                     'error': f'Availability check crashed: {str(e)}'
@@ -340,27 +340,27 @@ class maniluaManager:
             if os.path.exists(lua_file):
                 os.remove(lua_file)
                 removed_files.append(f'{appid}.lua')
-                logger.log(f"manilua: Removed {lua_file}")
+                logger.log(f"Removed {lua_file}")
 
             disabled_file = os.path.join(stplug_path, f'{appid}.lua.disabled')
             if os.path.exists(disabled_file):
                 os.remove(disabled_file)
                 removed_files.append(f'{appid}.lua.disabled')
-                logger.log(f"manilua: Removed {disabled_file}")
+                logger.log(f"Removed {disabled_file}")
 
             for filename in os.listdir(stplug_path):
                 if filename.startswith(f'{appid}_') and filename.endswith('.manifest'):
                     manifest_file = os.path.join(stplug_path, filename)
                     os.remove(manifest_file)
                     removed_files.append(filename)
-                    logger.log(f"manilua: Removed {manifest_file}")
+                    logger.log(f"Removed {manifest_file}")
 
             if removed_files:
-                logger.log(f"manilua: Successfully removed {len(removed_files)} files for app {appid}: {removed_files}")
+                logger.log(f"Successfully removed {len(removed_files)} files for app {appid}: {removed_files}")
                 return {'success': True, 'message': f'Removed {len(removed_files)} files', 'removed_files': removed_files}
             else:
                 return {'success': False, 'error': f'No files found for app {appid}'}
 
         except Exception as e:
-            logger.error(f"manilua: Error removing files for app {appid}: {e}")
+            logger.error(f"Error removing files for app {appid}: {e}")
             return {'success': False, 'error': str(e)}

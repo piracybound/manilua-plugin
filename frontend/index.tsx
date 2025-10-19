@@ -245,7 +245,7 @@ function showDownloadModal(initialTextKey: string = 'status.downloading'): Downl
         try {
             ShowAlertDialog(t('auth.title'), pendingText);
         } catch (error) {
-            console.warn('manilua: failed to open download modal via ShowAlertDialog', error);
+            console.warn('failed to open download modal via ShowAlertDialog', error);
         }
     } else {
         const fallbackOverlay = document.createElement('div');
@@ -453,7 +453,7 @@ async function showApiKeyPrompt(appId: number | null): Promise<boolean> {
     }
 
     if (typeof ShowConfirmDialog !== 'function') {
-        console.error('manilua: ShowConfirmDialog not available');
+        console.error('ShowConfirmDialog not available');
         return false;
     }
 
@@ -623,7 +623,7 @@ async function showApiKeyPrompt(appId: number | null): Promise<boolean> {
             }, 120);
         });
     } catch (error) {
-        console.error('manilua: Failed to show API key prompt', error);
+        console.error('Failed to show API key prompt', error);
         return false;
     }
 }
