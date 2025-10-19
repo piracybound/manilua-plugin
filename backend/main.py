@@ -39,19 +39,12 @@ def GetPluginDir():
 
 class Plugin:
     def __init__(self):
-        self.plugin_dir = GetPluginDir()
-        self.backend_path = os.path.join(self.plugin_dir, 'backend')
-        self.api_manager = APIManager(self.backend_path)
-        self.manilua_manager = maniluaManager(self.backend_path, self.api_manager)
+        self.plugin_dir = None
+        self.backend_path = None
+        self.api_manager = None
+        self.manilua_manager = None
         self._api_key = None
         self._injected = False
-        self._load_api_key()
-
-        if self.has_api_key() and isinstance(self._api_key, str) and self._api_key.strip() != "":
-            self.api_manager.set_api_key(self._api_key)
-            self.manilua_manager.set_api_key(self._api_key)
-        else:
-            logger.log("manilua: backend initialized without API key")
 
     def _load_api_key(self):
         api_key_file = os.path.join(self.backend_path, 'api_key.txt')
@@ -98,7 +91,23 @@ class Plugin:
         logger.log(f"manilua: v{VERSION} ready")
 
     def _load(self):
+        global plugin
+        plugin = self
+
         logger.log(f"manilua: backend loading (v{VERSION})")
+
+        self.plugin_dir = GetPluginDir()
+        self.backend_path = os.path.join(self.plugin_dir, 'backend')
+        self.api_manager = APIManager(self.backend_path)
+        self.manilua_manager = maniluaManager(self.backend_path, self.api_manager)
+        self._load_api_key()
+
+        if self.has_api_key() and isinstance(self._api_key, str) and self._api_key.strip() != "":
+            self.api_manager.set_api_key(self._api_key)
+            self.manilua_manager.set_api_key(self._api_key)
+        else:
+            logger.log("manilua: backend initialized without API key")
+
         self._inject_webkit_files()
         Millennium.ready()
         logger.log("manilua: backend ready")
@@ -107,17 +116,10 @@ class Plugin:
         logger.log("Unloading manilua plugin")
         close_global_client()
 
-
-_plugin_instance = None
+plugin = None
 
 def get_plugin():
-    global _plugin_instance
-    if _plugin_instance is None:
-        _plugin_instance = Plugin()
-        _plugin_instance._load()
-    return _plugin_instance
-
-plugin = get_plugin()
+    return plugin
 
 class Logger:
     @staticmethod
@@ -160,7 +162,6 @@ def GetLocalLibrary() -> str:
     except Exception as e:
         logger.error(f'GetLocalLibrary failed: {e}')
         return error_response(str(e))
-
 
 def SetAPIKey(*args, **kwargs) -> str:
     try:
@@ -211,8 +212,6 @@ def GetAPIKeyStatus() -> str:
     except Exception as e:
         logger.error(f'GetAPIKeyStatus failed: {e}')
         return error_response(str(e))
-
-
 
 def removeViamanilua(appid: int) -> str:
     try:
